@@ -18,6 +18,7 @@ func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, onlyCodes
 			code = e.Code
 		}
 		c.Set(fiber.HeaderContentType, fiber.MIMETextPlainCharsetUTF8)
+		c.Status(code)
 
 		if logger != nil && (len(onlyCodes) == 0 || contains(onlyCodes, code)) {
 			logger.Divider("=", 100, c.IP())
@@ -36,7 +37,7 @@ func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, onlyCodes
 			logger.Raw("\n\n")
 		}
 
-		return c.Status(code).SendString(err.Error())
+		return c.SendString(err.Error())
 	}
 }
 
