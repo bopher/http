@@ -266,7 +266,7 @@ func (s *cookieSession) Save() {
 		if s.cache.Exists(s.identifier("")) {
 			s.cache.Set(s.identifier(""), data)
 		} else {
-			if s.expiration < 0 {
+			if s.expiration <= 0 {
 				s.cache.Put(s.identifier(""), string(data), 24*time.Hour)
 			} else {
 				s.cache.Put(s.identifier(""), string(data), s.expiration)
