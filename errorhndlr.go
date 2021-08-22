@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"runtime/debug"
 	"time"
 
@@ -11,18 +12,17 @@ import (
 // ErrorLogger handle errors and log into logger
 //
 // Enter only codes to log only codes included
-func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, onlyCodes ...int) fiber.ErrorHandler {
+func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, production bool, onlyCodes ...int) fiber.ErrorHandler {
 	return func(c *fiber.Ctx, err error) error {
 		code := 500
 		if e, ok := err.(*fiber.Error); ok {
 			code = e.Code
 		}
-		c.Set(fiber.HeaderContentType, fiber.MIMETextPlainCharsetUTF8)
-		c.Status(code)
 
+		// Log
 		if logger != nil && (len(onlyCodes) == 0 || contains(onlyCodes, code)) {
 			logger.Divider("=", 100, c.IP())
-			logger.Error().Print(err.Error())
+			logger.Error().Tags(fmt.Sprintf("%d", code)).Print(err.Error())
 			logger.Raw("\n")
 			logger.Divider("-", 100, "Stacktrace:")
 			logger.Raw(string(debug.Stack()))
@@ -37,7 +37,12 @@ func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, onlyCodes
 			logger.Raw("\n\n")
 		}
 
-		return c.SendString(err.Error())
+		// Return response
+		if production {
+			return c.SendStatus(code)
+		} else {
+			return c.Status(code).SendString(err.Error())
+		}
 	}
 }
 
