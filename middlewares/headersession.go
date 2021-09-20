@@ -15,6 +15,8 @@ func NewHeaderSession(cache cache.Cache, exp time.Duration) fiber.Handler {
 		defer s.Save()
 		s.Parse()
 		ctx.Locals("h-session", s)
+		ctx.Append("Access-Control-Expose-Headers", "X-SESSION-ID")
+		ctx.Append("Access-Control-Allow-Headers", "X-SESSION-ID")
 		return ctx.Next()
 	}
 }
