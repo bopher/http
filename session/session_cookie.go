@@ -264,7 +264,7 @@ func (s *cookieSession) Destroy() {
 func (s *cookieSession) Save() {
 	if data, err := json.Marshal(s.data); err == nil {
 		if s.cache.Exists(s.identifier("")) {
-			s.cache.Set(s.identifier(""), data)
+			s.cache.Set(s.identifier(""), string(data))
 		} else {
 			if s.expiration <= 0 {
 				s.cache.Put(s.identifier(""), string(data), 24*time.Hour)
