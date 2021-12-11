@@ -1,27 +1,58 @@
 package middlewares
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/bopher/cache"
+	"github.com/bopher/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 // RateLimiter middleware
 func RateLimiter(key string, maxAttempts uint32, ttl time.Duration, c cache.Cache) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		limiter := cache.NewRateLimiter(key+"-R-L-"+ctx.IP(), maxAttempts, ttl, c)
+		prettyErr := func(err error) error {
+			return utils.TaggedError(
+				[]string{"RateLimiterMW"},
+				err.Error(),
+			)
+		}
+
+		limiter, err := cache.NewRateLimiter(key+"_limiter_-"+ctx.IP(), maxAttempts, ttl, c)
+		if err != nil {
+			return prettyErr(err)
+		}
+
 		ctx.Append("Access-Control-Expose-Headers", "X-LIMIT-UNTIL")
 		ctx.Append("Access-Control-Expose-Headers", "X-LIMIT-REMAIN")
 		ctx.Append("Access-Control-Allow-Headers", "X-LIMIT-UNTIL")
 		ctx.Append("Access-Control-Allow-Headers", "X-LIMIT-REMAIN")
-		if limiter.MustLock() {
-			ctx.Set("X-LIMIT-UNTIL", limiter.AvailableIn().String())
-			return ctx.SendStatus(429)
+
+		mustLook, err := limiter.MustLock()
+		if err != nil {
+			return prettyErr(err)
+		}
+
+		if mustLook {
+			until, err := limiter.AvailableIn()
+			if err != nil {
+				return prettyErr(err)
+			}
+			ctx.Set("X-LIMIT-UNTIL", until.String())
+			return ctx.SendStatus(fiber.StatusTooManyRequests)
 		} else {
-			limiter.Hit()
-			ctx.Set("X-LIMIT-REMAIN", strconv.Itoa(int(limiter.RetriesLeft())))
+			err = limiter.Hit()
+			if err != nil {
+				return prettyErr(err)
+			}
+
+			left, err := limiter.RetriesLeft()
+			if err != nil {
+				return prettyErr(err)
+			}
+			ctx.Set("X-LIMIT-REMAIN", fmt.Sprint(left))
+
 			return ctx.Next()
 		}
 	}

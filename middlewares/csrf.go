@@ -1,9 +1,8 @@
 package middlewares
 
 import (
-	"errors"
-
 	"github.com/bopher/http/session"
+	"github.com/bopher/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -12,11 +11,13 @@ import (
 func CSRFMiddleware(session session.Session) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		if session == nil {
-			return errors.New("session driver not valid!")
+			return utils.TaggedError(
+				[]string{"CSRFMiddleware"},
+				"session driver is nil",
+			)
 		}
 
-		token, _ := session.Get("csrf_token").(string)
-		if token == "" {
+		if session.Get("csrf_token") == nil {
 			session.Set("csrf_token", uuid.New().String())
 		}
 
@@ -25,11 +26,26 @@ func CSRFMiddleware(session session.Session) fiber.Handler {
 }
 
 // CSRFMiddleware
-func GetCSRFKey(session session.Session) string {
-	if session != nil {
-		if token, ok := session.Get("csrf_token").(string); ok {
-			return token
-		}
+func GetCSRFKey(session session.Session) (string, error) {
+	if session == nil {
+		return "", utils.TaggedError(
+			[]string{"GetCSRFKey"},
+			"session driver is nil",
+		)
 	}
-	return ""
+
+	caster := session.Cast("csrf_token")
+	if caster.IsNil() {
+		return "", nil
+	}
+
+	v, err := caster.String()
+	if err != nil {
+		return "", utils.TaggedError(
+			[]string{"GetCSRFKey"},
+			err.Error(),
+		)
+	}
+
+	return v, nil
 }

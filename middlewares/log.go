@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/bopher/logger"
@@ -17,7 +17,7 @@ func AccessLogger(logger logger.Logger) fiber.Handler {
 			logger.
 				Log().
 				Type(ctx.Method()).
-				Tags(strconv.Itoa(ctx.Response().StatusCode())).
+				Tags(fmt.Sprint(ctx.Response().StatusCode())).
 				Tags(ctx.IP()).
 				Tags(latecy).
 				Print(ctx.Path())

@@ -17,7 +17,7 @@ Http packages comes with two type session driver by default (header and cookie).
 
 ```go
 // Signature:
-NewCookieSession(cache cache.Cache, ctx *fiber.Ctx, secure bool, domain string, sameSite string, exp time.Duration, generator func() string, key string) Session
+NewCookieSession(cache cache.Cache, ctx *fiber.Ctx, secure bool, domain string, sameSite string, exp time.Duration, generator func() string, name string) Session
 
 // Example:
 import "github.com/bopher/http/session"
@@ -32,7 +32,7 @@ Header sessions attached to and parsed from HTTP headers.
 
 ```go
 // Signature:
-NewHeaderSession(cache cache.Cache, ctx *fiber.Ctx, exp time.Duration, generator func() string, key string) Session
+NewHeaderSession(cache cache.Cache, ctx *fiber.Ctx, exp time.Duration, generator func() string, name string) Session
 
 // Example:
 import "github.com/bopher/http/session"
@@ -43,21 +43,11 @@ hSession := NewHeaderSession(rCache, ctx, 30 * time.Minute, session.UUIDGenerato
 
 Session interface contains following methods:
 
-#### Parse
-
-Parse session from request.
-
-```go
-// Signature:
-Parse()
-```
-
 #### ID
 
 Get session id.
 
 ```go
-// Signature:
 ID() string
 ```
 
@@ -66,8 +56,15 @@ ID() string
 Get request context.
 
 ```go
-// Signature:
 Context() *fiber.Ctx
+```
+
+#### Parse
+
+Parse session from request.
+
+```go
+Parse() error
 ```
 
 #### Regenerate
@@ -75,53 +72,47 @@ Context() *fiber.Ctx
 Regenerate session id.
 
 ```go
-// Signature:
-Regenerate()
+Regenerate() error
 ```
 
 #### Set
 
-Set session item.
+Set session value.
 
 ```go
-// Signature:
 Set(key string, value interface{})
-```
-
-#### Exists
-
-Check if session item is exists.
-
-```go
-// Signature:
-Exists(key string) bool
 ```
 
 #### Get
 
-Get session item.
+Get session value.
 
 ```go
-// Signature:
 Get(key string) interface{}
-```
-
-#### All
-
-Get all session stored value.
-
-```go
-// Signature:
-All() map[string]interface{}
 ```
 
 #### Delete
 
-Delete session item.
+Delete session value.
 
 ```go
-// Signature:
 Delete(key string)
+```
+
+#### Exists
+
+Check if session is exists.
+
+```go
+Exists(key string) bool
+```
+
+#### Cast
+
+Parse session item as caster.
+
+```go
+Cast(key string) caster.Caster
 ```
 
 #### Destroy
@@ -129,54 +120,15 @@ Delete(key string)
 Destroy session.
 
 ```go
-// Signature:
-Destroy()
+Destroy() error
 ```
 
 #### Save
 
-Save session (must called at ned of request).
+Save session (must called at end of request).
 
 ```go
-// Signature:
-Save()
-```
-
-#### Get By Type Methods
-
-Helper get methods return fallback value if value not exists in session.
-
-```go
-// Parse item as boolean
-Bool(key string, fallback bool) (bool, bool)
-// Int parse item as int
-Int(key string, fallback int) (int, bool)
-// Int8 parse item as int8
-Int8(key string, fallback int8) (int8, bool)
-// Int16 parse item as int16
-Int16(key string, fallback int16) (int16, bool)
-// Int32 parse item as int32
-Int32(key string, fallback int32) (int32, bool)
-// Int64 parse item as int64
-Int64(key string, fallback int64) (int64, bool)
-// UInt parse item as uint
-UInt(key string, fallback uint) (uint, bool)
-// UInt8 parse item as uint8
-UInt8(key string, fallback uint8) (uint8, bool)
-// UInt16 parse item as uint16
-UInt16(key string, fallback uint16) (uint16, bool)
-// UInt32 parse item as uint32
-UInt32(key string, fallback uint32) (uint32, bool)
-// UInt64 parse item as uint64
-UInt64(key string, fallback uint64) (uint64, bool)
-// Float32 parse item as float64
-Float32(key string, fallback float32) (float32, bool)
-// Float64 parse item as float64
-Float64(key string, fallback float64) (float64, bool)
-// String parse item as string
-String(key string, fallback string) (string, bool)
-// Bytes parse item as bytes array
-Bytes(key string, fallback []byte) ([]byte, bool)
+Save() error
 ```
 
 ## Middlewares
@@ -223,6 +175,8 @@ if session != nil {
 }
 ```
 
+**Note:** You can use `GetSession(ctx)` method for resolve session from cookie or session (if cookie not exists then try parse from header).
+
 ### CSRF Token
 
 This middleware automatically generate and attach CSRF key to session.
@@ -236,7 +190,7 @@ import "github.com/bopher/http/middlewares"
 app.Use(middlewares.CSRFMiddleware(mySession))
 
 // Access CSRF key
-if csrfKey := middlewares.GetCSRFKey(mySession); csrfKey != "" {
+if csrfKey, err := middlewares.GetCSRFKey(mySession); csrfKey != "" {
     // check CSRF key
 }
 ```
@@ -282,7 +236,7 @@ app.Use(middlewares.AccessLogger(myLogger))
 
 ### Rate Limiter
 
-This middleware limit maximum request to server.
+This middleware limit maximum request to server. this middleware send `X-LIMIT-UNTIL` header on locked and `X-LIMIT-REMAIN` otherwise.
 
 ```go
 // Signature:
@@ -290,7 +244,7 @@ RateLimiter(key string, maxAttempts uint32, ttl time.Duration, c cache.Cache) fi
 
 // Example:
 import "github.com/bopher/http/middlewares"
-app.Use(middlewares.RateLimiter("req-rl", 60, 1 * time.Minute, rCache)) // Accept 60 request in minutes
+app.Use(middlewares.RateLimiter("global", 60, 1 * time.Minute, rCache)) // Accept 60 request in minutes
 ```
 
 ## Recover Panics (Fiber ErrorHandler)
