@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/bopher/cache v1.2.0
 	github.com/bopher/caster v1.2.0
-	github.com/bopher/logger v1.1.2
+	github.com/bopher/logger v1.2.0
 	github.com/bopher/utils v1.6.0
 	github.com/gofiber/fiber/v2 v2.23.0
 	github.com/google/uuid v1.3.0
