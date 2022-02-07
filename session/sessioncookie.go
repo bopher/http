@@ -94,17 +94,17 @@ func (this *cSession) Parse() error {
 		return this.Regenerate()
 	} else {
 		res := make(map[string]interface{})
-		raw, err := this.cache.Get(this.id())
+		caster, err := this.cache.Cast(this.id())
 		if err != nil {
 			return this.err(err.Error())
 		}
 
-		bytes, err := GetBytes(raw)
+		str, err := caster.String()
 		if err != nil {
 			return this.err(err.Error())
 		}
 
-		err = json.Unmarshal(bytes, &res)
+		err = json.Unmarshal([]byte(str), &res)
 		if err != nil {
 			return this.err(err.Error())
 		}
