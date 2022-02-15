@@ -1,14 +1,13 @@
 package middlewares
 
 import (
-	"strings"
-
+	"github.com/bopher/http"
 	"github.com/gofiber/fiber/v2"
 )
 
 // JSONOnly implement
 func JSONOnly(ctx *fiber.Ctx) error {
-	if strings.ToLower(ctx.Get("Content-Type")) != "application/json" {
+	if !http.IsJsonRequest(ctx) {
 		return ctx.SendStatus(fiber.StatusNotAcceptable)
 	} else {
 		return ctx.Next()

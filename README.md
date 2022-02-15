@@ -1,6 +1,6 @@
 # HTTP
 
-Session manager, middlewares and error handler for gofiber app.
+Session manager, middleware, utilities and error handler for goFiber app.
 
 ## Session
 
@@ -36,7 +36,7 @@ NewHeaderSession(cache cache.Cache, ctx *fiber.Ctx, exp time.Duration, generator
 
 // Example:
 import "github.com/bopher/http/session"
-hSession := NewHeaderSession(rCache, ctx, 30 * time.Minute, session.UUIDGenerator, "X-SESSION-ID")
+hSession := session.NewHeaderSession(rCache, ctx, 30 * time.Minute, session.UUIDGenerator, "X-SESSION-ID")
 ```
 
 ### Usage
@@ -131,9 +131,9 @@ Save session (must called at end of request).
 Save() error
 ```
 
-## Middlewares
+## Middleware
 
-HTTP Package contains following middlewares by default:
+HTTP Package contains following middleware by default:
 
 ### Cookie Session
 
@@ -147,12 +147,6 @@ NewCookieSession(cache cache.Cache, secure bool, domain string, sameSite string,
 import "github.com/bopher/http/middlewares"
 import "github.com/bopher/http/session"
 app.Use(middlewares.NewCookieSession(myCache, false, "", session.SameSiteNone, 0))
-
-// Access session
-session := middlewares.GetCookieSession(ctx)
-if session != nil {
-    // Do something with session
-}
 ```
 
 ### Header Session
@@ -167,19 +161,13 @@ NewHeaderSession(cache cache.Cache, exp time.Duration) fiber.Handler
 import "github.com/bopher/http/middlewares"
 import "github.com/bopher/http/session"
 app.Use(middlewares.NewHeaderSession(myCache, 0))
-
-// Access session
-session := middlewares.GetHeaderSession(ctx)
-if session != nil {
-    // Do something with session
-}
 ```
 
 **Note:** You can use `GetSession(ctx)` method for resolve session from cookie or session (if cookie not exists then try parse from header).
 
 ### CSRF Token
 
-This middleware automatically generate and attach CSRF key to session.
+This middleware automatically generate and attach CSRF key to session if not exists.
 
 ```go
 // Signature:
@@ -188,11 +176,6 @@ CSRFMiddleware(session session.Session) fiber.Handler
 // Example:
 import "github.com/bopher/http/middlewares"
 app.Use(middlewares.CSRFMiddleware(mySession))
-
-// Access CSRF key
-if csrfKey, err := middlewares.GetCSRFKey(mySession); csrfKey != "" {
-    // check CSRF key
-}
 ```
 
 ### JSON Only Checker
@@ -206,19 +189,6 @@ JSONOnly(ctx *fiber.Ctx) error
 // Example:
 import "github.com/bopher/http/middlewares"
 app.Use(middlewares.JSONOnly)
-```
-
-### Maintenance Mode
-
-This middleware return 503 HTTP error if `maintenance` key exists in cache.
-
-```go
-// Signature:
-Maintenance(c cache.Cache) fiber.Handler
-
-// Example:
-import "github.com/bopher/http/middlewares"
-app.Use(middlewares.Maintenance(rCache))
 ```
 
 ### Access Logger
@@ -262,4 +232,70 @@ import "github.com/bopher/http"
 app := fiber.New(fiber.Config{
     ErrorHandler: http.ErrorLogger(myLogger, myFormatter),
 })
+```
+
+## Utils
+
+### IsJsonRequest
+
+Check if request is json.
+
+```go
+func IsJsonRequest(ctx *fiber.Ctx) bool
+```
+
+### WantJson
+
+Check if request want json.
+
+```go
+func WantJson(ctx *fiber.Ctx) bool
+```
+
+### IsUnderMaintenance
+
+Check if under maintenance mode.
+
+```go
+func IsUnderMaintenance(c cache.Cache) (bool, error)
+```
+
+### GetCSRF
+
+Get csrf key.
+
+```go
+func GetCSRF(session session.Session) (string, error)
+```
+
+### CheckCSRF
+
+Check csrf token.
+
+```go
+func CheckCSRF(session session.Session, key string) (bool, error)
+```
+
+### CookieSession
+
+Get cookie session driver from context. return nil on fail!
+
+```go
+func CookieSession(ctx *fiber.Ctx) session.Session
+```
+
+### HeaderSession
+
+Get header session driver from context. return nil on fail!
+
+```go
+func HeaderSession(ctx *fiber.Ctx) session.Session
+```
+
+### GetSession
+
+Get session driver from context. If cookie session exists return cookie session otherwise try to resolve header session or return nil on fail.
+
+```go
+func GetSession(ctx *fiber.Ctx) session.Session
 ```

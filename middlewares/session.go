@@ -8,33 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// GetCookieSession get session driver from context
-func GetCookieSession(ctx *fiber.Ctx) session.Session {
-	if session, ok := ctx.Locals("sessioncookie").(session.Session); ok {
-		return session
-	}
-	return nil
-}
-
-// GetHeaderSession get session driver from context
-func GetHeaderSession(ctx *fiber.Ctx) session.Session {
-	if session, ok := ctx.Locals("sessionheader").(session.Session); ok {
-		return session
-	}
-	return nil
-}
-
-// GetSession get session driver from context
-//
-// if cookie session exists return cookie session otherwise try to resolve header session or return nil on fail
-func GetSession(ctx *fiber.Ctx) session.Session {
-	if session := GetCookieSession(ctx); session != nil {
-		return session
-	} else {
-		return GetHeaderSession(ctx)
-	}
-}
-
 // NewCookieSession create new cookie based session
 //
 // this function generate panic on save fail!
