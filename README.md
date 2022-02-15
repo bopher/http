@@ -135,6 +135,64 @@ Save() error
 
 HTTP Package contains following middleware by default:
 
+### CSRF Token
+
+This middleware automatically generate and attach CSRF key to session if not exists.
+
+```go
+// Signature:
+CSRFMiddleware(session session.Session) fiber.Handler
+
+// Example:
+import "github.com/bopher/http/middlewares"
+app.Use(middlewares.CSRFMiddleware(mySession))
+```
+
+### JSON Only Checker
+
+Check if request is a json request. You can pass a `callback` handler to call when request is not json. If nil passed to `callback` this middleware returns `406 HTTP error`.
+
+```go
+// Signature:
+JSONOnly(callback fiber.Handler) fiber.Handler
+
+// Example:
+import "github.com/bopher/http/middlewares"
+app.Use(middlewares.JSONOnly(nil))
+```
+
+### Rate Limiter
+
+This middleware limit maximum request to server. this middleware send `X-LIMIT-UNTIL` header on locked and `X-LIMIT-REMAIN`. You can pass a `callback` handler to call when request is not json. If nil passed to `callback` this middleware returns `429 HTTP error`.
+
+```go
+// Signature:
+RateLimiter(
+    key string,
+    maxAttempts uint32,
+    ttl time.Duration,
+    c cache.Cache,
+    callback fiber.Handler,
+) fiber.Handler
+
+// Example:
+import "github.com/bopher/http/middlewares"
+app.Use(middlewares.RateLimiter("global", 60, 1 * time.Minute, rCache, nil)) // Accept 60 request in minutes
+```
+
+### Access Logger
+
+This middleware format and log request information to logger (use `"github.com/bopher/logger"` driver).
+
+```go
+// Signature:
+AccessLogger(logger logger.Logger) fiber.Handler
+
+// Example:
+import "github.com/bopher/http/middlewares"
+app.Use(middlewares.AccessLogger(myLogger))
+```
+
 ### Cookie Session
 
 This middleware create a session from cookie.
@@ -163,59 +221,7 @@ import "github.com/bopher/http/session"
 app.Use(middlewares.NewHeaderSession(myCache, 0))
 ```
 
-**Note:** You can use `GetSession(ctx)` method for resolve session from cookie or session (if cookie not exists then try parse from header).
-
-### CSRF Token
-
-This middleware automatically generate and attach CSRF key to session if not exists.
-
-```go
-// Signature:
-CSRFMiddleware(session session.Session) fiber.Handler
-
-// Example:
-import "github.com/bopher/http/middlewares"
-app.Use(middlewares.CSRFMiddleware(mySession))
-```
-
-### JSON Only Checker
-
-This middleware returns 406 HTTP error if request not want json (check `Content-Type` header). This middlewares useful for api requests.
-
-```go
-// Signature:
-JSONOnly(ctx *fiber.Ctx) error
-
-// Example:
-import "github.com/bopher/http/middlewares"
-app.Use(middlewares.JSONOnly)
-```
-
-### Access Logger
-
-This middleware format and log request information to logger (`"github.com/bopher/logger"` driver).
-
-```go
-// Signature:
-AccessLogger(logger logger.Logger) fiber.Handler
-
-// Example:
-import "github.com/bopher/http/middlewares"
-app.Use(middlewares.AccessLogger(myLogger))
-```
-
-### Rate Limiter
-
-This middleware limit maximum request to server. this middleware send `X-LIMIT-UNTIL` header on locked and `X-LIMIT-REMAIN` otherwise.
-
-```go
-// Signature:
-RateLimiter(key string, maxAttempts uint32, ttl time.Duration, c cache.Cache) fiber.Handler
-
-// Example:
-import "github.com/bopher/http/middlewares"
-app.Use(middlewares.RateLimiter("global", 60, 1 * time.Minute, rCache)) // Accept 60 request in minutes
-```
+**Note:** You can use `GetSession(ctx)` helper for resolve session from cookie or session (if cookie not exists then try parse from header).
 
 ## Recover Panics (Fiber ErrorHandler)
 
@@ -252,30 +258,6 @@ Check if request want json.
 func WantJson(ctx *fiber.Ctx) bool
 ```
 
-### IsUnderMaintenance
-
-Check if under maintenance mode.
-
-```go
-func IsUnderMaintenance(c cache.Cache) (bool, error)
-```
-
-### GetCSRF
-
-Get csrf key.
-
-```go
-func GetCSRF(session session.Session) (string, error)
-```
-
-### CheckCSRF
-
-Check csrf token.
-
-```go
-func CheckCSRF(session session.Session, key string) (bool, error)
-```
-
 ### CookieSession
 
 Get cookie session driver from context. return nil on fail!
@@ -298,4 +280,20 @@ Get session driver from context. If cookie session exists return cookie session 
 
 ```go
 func GetSession(ctx *fiber.Ctx) session.Session
+```
+
+### GetCSRF
+
+Get csrf key.
+
+```go
+func GetCSRF(session session.Session) (string, error)
+```
+
+### CheckCSRF
+
+Check csrf token.
+
+```go
+func CheckCSRF(session session.Session, key string) (bool, error)
 ```

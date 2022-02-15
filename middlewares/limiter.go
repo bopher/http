@@ -10,7 +10,13 @@ import (
 )
 
 // RateLimiter middleware
-func RateLimiter(key string, maxAttempts uint32, ttl time.Duration, c cache.Cache) fiber.Handler {
+func RateLimiter(
+	key string,
+	maxAttempts uint32,
+	ttl time.Duration,
+	c cache.Cache,
+	callback fiber.Handler,
+) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		prettyErr := func(err error) error {
 			return utils.TaggedError(
@@ -40,7 +46,11 @@ func RateLimiter(key string, maxAttempts uint32, ttl time.Duration, c cache.Cach
 				return prettyErr(err)
 			}
 			ctx.Set("X-LIMIT-UNTIL", until.String())
-			return ctx.SendStatus(fiber.StatusTooManyRequests)
+			if callback == nil {
+				return ctx.SendStatus(fiber.StatusTooManyRequests)
+			} else {
+				return callback(ctx)
+			}
 		} else {
 			err = limiter.Hit()
 			if err != nil {

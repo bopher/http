@@ -5,11 +5,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// JSONOnly implement
-func JSONOnly(ctx *fiber.Ctx) error {
-	if !http.IsJsonRequest(ctx) {
-		return ctx.SendStatus(fiber.StatusNotAcceptable)
-	} else {
-		return ctx.Next()
+// JSONOnly allow json requests only
+func JSONOnly(callback fiber.Handler) fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		if !http.IsJsonRequest(ctx) {
+			if callback == nil {
+				return ctx.SendStatus(fiber.StatusNotAcceptable)
+			} else {
+				return callback(ctx)
+			}
+		} else {
+			return ctx.Next()
+		}
 	}
 }
