@@ -9,10 +9,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// ErrorCallback a callback type for generate error response
+type ErrorCallback func(*fiber.Ctx, error) error
+
 // ErrorLogger handle errors and log into logger
 //
 // Enter only codes to log only codes included
-func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, production bool, onlyCodes ...int) fiber.ErrorHandler {
+func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, callback ErrorCallback, onlyCodes ...int) fiber.ErrorHandler {
 	return func(c *fiber.Ctx, err error) error {
 		code := 500
 		if e, ok := err.(*fiber.Error); ok {
@@ -38,10 +41,10 @@ func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, productio
 		}
 
 		// Return response
-		if production {
+		if callback == nil {
 			return c.SendStatus(code)
 		} else {
-			return c.Status(code).SendString(err.Error())
+			return callback(c, err)
 		}
 	}
 }

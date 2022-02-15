@@ -225,18 +225,18 @@ app.Use(middlewares.NewHeaderSession(myCache, 0))
 
 ## Recover Panics (Fiber ErrorHandler)
 
-This Error handler log error to logger and return http error to response. You can use this function instead of default fiber error handler.
+This Error handler log error to logger and return http error to response. You can use this function instead of default fiber error handler to log error to `github.com/bopher/logger` driver. You can customize error response by passing `callback`. If `nil` passed as `callback` value this function returns `HTTP Status` code for response.
 
 **Note:** You can pass a list of code as _onlyCodes_ parameter to log errors only if error code contains in your list.
 
 ```go
 // Signature:
-ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, onlyCodes ...int) fiber.ErrorHandler
+ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, callback ErrorCallback, onlyCodes ...int) fiber.ErrorHandler
 
 // Example:
 import "github.com/bopher/http"
 app := fiber.New(fiber.Config{
-    ErrorHandler: http.ErrorLogger(myLogger, myFormatter),
+    ErrorHandler: http.ErrorLogger(myLogger, myFormatter, nil),
 })
 ```
 
