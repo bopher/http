@@ -15,7 +15,7 @@ func IsJsonRequest(ctx *fiber.Ctx) bool {
 
 // WantJson check if request want json
 func WantJson(ctx *fiber.Ctx) bool {
-	return ctx.Accepts("application/json") == "application/json"
+	return strings.Contains(strings.ToLower(ctx.Get("Accept")), "application/json")
 }
 
 // CookieSession get cookie session driver from context
