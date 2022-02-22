@@ -242,6 +242,14 @@ app := fiber.New(fiber.Config{
 
 ## Utils
 
+### HasFile
+
+Check check if request contains file.
+
+```go
+func HasFile(ctx *fiber.Ctx, name string) (bool, error)
+```
+
 ### IsJsonRequest
 
 Check if request is json.

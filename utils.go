@@ -6,7 +6,17 @@ import (
 	"github.com/bopher/http/session"
 	"github.com/bopher/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/valyala/fasthttp"
 )
+
+// HasFile check if request contains file
+func HasFile(ctx *fiber.Ctx, name string) (bool, error) {
+	_, err := ctx.FormFile(name)
+	if err == fasthttp.ErrMissingFile {
+		return false, nil
+	}
+	return true, err
+}
 
 // IsJsonRequest check if request is json
 func IsJsonRequest(ctx *fiber.Ctx) bool {
