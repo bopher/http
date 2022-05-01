@@ -173,11 +173,13 @@ RateLimiter(
     ttl time.Duration,
     c cache.Cache,
     callback fiber.Handler,
+    methods []string,
+    ignore []string,
 ) fiber.Handler
 
 // Example:
 import "github.com/bopher/http/middlewares"
-app.Use(middlewares.RateLimiter("global", 60, 1 * time.Minute, rCache, nil)) // Accept 60 request in minutes
+app.Use(middlewares.RateLimiter("global", 60, 1 * time.Minute, rCache, nil, []string{"POST", "PUT"}, []string{"/assets.*"})) // Accept 60 request in minutes
 ```
 
 ### Access Logger

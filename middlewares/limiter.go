@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/bopher/cache"
@@ -16,6 +17,8 @@ func RateLimiter(
 	ttl time.Duration,
 	c cache.Cache,
 	callback fiber.Handler,
+	methods []string,
+	ignore []string,
 ) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		prettyErr := func(err error) error {
@@ -23,6 +26,36 @@ func RateLimiter(
 				[]string{"RateLimiterMW"},
 				err.Error(),
 			)
+		}
+
+		validMethod := func(_method string) bool {
+			if len(methods) == 0 {
+				return true
+			} else {
+				for _, m := range methods {
+					if m == _method {
+						return true
+					}
+				}
+				return false
+			}
+		}
+
+		mustIgnore := func(path string) bool {
+			if len(ignore) > 0 {
+				for _, expr := range ignore {
+					if r, err := regexp.Compile(expr); err != nil {
+						if r.MatchString(path) {
+							return true
+						}
+					}
+				}
+			}
+			return false
+		}
+
+		if !validMethod(ctx.Method()) || mustIgnore(ctx.Path()) {
+			return ctx.Next()
 		}
 
 		limiter, err := cache.NewRateLimiter(key+"_limiter_-"+ctx.IP(), maxAttempts, ttl, c)
