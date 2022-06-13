@@ -33,12 +33,12 @@ type cSession struct {
 	name string
 	// cache key
 	key  string
-	data map[string]interface{}
+	data map[string]any
 }
 
 func (this cSession) err(
 	pattern string,
-	params ...interface{},
+	params ...any,
 ) error {
 	return utils.TaggedError([]string{"CookieSession"}, pattern, params...)
 }
@@ -64,7 +64,7 @@ func (this *cSession) init(
 	if this.name == "" {
 		this.name = "session"
 	}
-	this.data = make(map[string]interface{})
+	this.data = make(map[string]any)
 }
 
 func (this cSession) id() string {
@@ -93,7 +93,7 @@ func (this *cSession) Parse() error {
 	if !exists {
 		return this.Regenerate()
 	} else {
-		res := make(map[string]interface{})
+		res := make(map[string]any)
 		caster, err := this.cache.Cast(this.id())
 		if err != nil {
 			return this.err(err.Error())
@@ -134,11 +134,11 @@ func (this *cSession) Regenerate() error {
 	return nil
 }
 
-func (this *cSession) Set(key string, value interface{}) {
+func (this *cSession) Set(key string, value any) {
 	this.data[key] = value
 }
 
-func (this cSession) Get(key string) interface{} {
+func (this cSession) Get(key string) any {
 	return this.data[key]
 }
 
@@ -161,7 +161,7 @@ func (this *cSession) Destroy() error {
 		return this.err(err.Error())
 	}
 	this.key = ""
-	this.data = make(map[string]interface{})
+	this.data = make(map[string]any)
 	return nil
 }
 

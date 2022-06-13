@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bopher/logger"
+	"github.com/bopher/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -23,7 +24,7 @@ func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, callback 
 		}
 
 		// Log
-		if logger != nil && (len(onlyCodes) == 0 || contains(onlyCodes, code)) {
+		if logger != nil && (len(onlyCodes) == 0 || utils.Contains[int](onlyCodes, code)) {
 			logger.Divider("=", 100, c.IP())
 			logger.Error().Tags(fmt.Sprintf("%d", code)).Print(err.Error())
 			logger.Raw("\n")
@@ -47,13 +48,4 @@ func ErrorLogger(logger logger.Logger, formatter logger.TimeFormatter, callback 
 			return callback(c, err)
 		}
 	}
-}
-
-func contains(items []int, search int) bool {
-	for _, item := range items {
-		if item == search {
-			return true
-		}
-	}
-	return false
 }

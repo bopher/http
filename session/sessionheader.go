@@ -24,12 +24,12 @@ type hSession struct {
 	name string
 	// cache key
 	key  string
-	data map[string]interface{}
+	data map[string]any
 }
 
 func (this hSession) err(
 	pattern string,
-	params ...interface{},
+	params ...any,
 ) error {
 	return utils.TaggedError([]string{"HeaderSession"}, pattern, params...)
 }
@@ -49,7 +49,7 @@ func (this *hSession) init(
 	if this.name == "" {
 		this.name = "X-SESSION-ID"
 	}
-	this.data = make(map[string]interface{})
+	this.data = make(map[string]any)
 }
 
 func (this hSession) id() string {
@@ -78,7 +78,7 @@ func (this *hSession) Parse() error {
 	if !exists {
 		return this.Regenerate()
 	} else {
-		res := make(map[string]interface{})
+		res := make(map[string]any)
 		caster, err := this.cache.Cast(this.id())
 		if err != nil {
 			return this.err(err.Error())
@@ -110,11 +110,11 @@ func (this *hSession) Regenerate() error {
 	return nil
 }
 
-func (s *hSession) Set(key string, value interface{}) {
+func (s *hSession) Set(key string, value any) {
 	s.data[key] = value
 }
 
-func (this hSession) Get(key string) interface{} {
+func (this hSession) Get(key string) any {
 	return this.data[key]
 }
 
@@ -137,7 +137,7 @@ func (this *hSession) Destroy() error {
 		return this.err(err.Error())
 	}
 	this.key = ""
-	this.data = make(map[string]interface{})
+	this.data = make(map[string]any)
 	return nil
 }
 

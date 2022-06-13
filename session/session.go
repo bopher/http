@@ -16,9 +16,9 @@ type Session interface {
 	// Regenerate regenerate session id
 	Regenerate() error
 	// Set set session value
-	Set(key string, value interface{})
+	Set(key string, value any)
 	// Get get session value
-	Get(key string) interface{}
+	Get(key string) any
 	// Delete delete session value
 	Delete(key string)
 	// Exists check if session is exists

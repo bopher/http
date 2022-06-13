@@ -29,16 +29,10 @@ func RateLimiter(
 		}
 
 		validMethod := func(_method string) bool {
-			if len(methods) == 0 {
+			if len(methods) == 0 || utils.Contains[string](methods, _method) {
 				return true
-			} else {
-				for _, m := range methods {
-					if m == _method {
-						return true
-					}
-				}
-				return false
 			}
+			return false
 		}
 
 		mustIgnore := func(path string) bool {

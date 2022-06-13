@@ -80,7 +80,7 @@ Regenerate() error
 Set session value.
 
 ```go
-Set(key string, value interface{})
+Set(key string, value any)
 ```
 
 #### Get
@@ -88,7 +88,7 @@ Set(key string, value interface{})
 Get session value.
 
 ```go
-Get(key string) interface{}
+Get(key string) any
 ```
 
 #### Delete
